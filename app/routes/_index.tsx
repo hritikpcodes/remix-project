@@ -1,10 +1,17 @@
 import type { MetaFunction } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
-import { AdCampaign, addCampaign, campaigns } from "data";
+import {
+  AdCampaign,
+  addCampaign,
+  campaigns,
+  deleteCampaign,
+  editCampaign,
+} from "data";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -27,8 +34,9 @@ export const meta: MetaFunction = () => {
 
 export const action = async ({ request }: { request: Request }) => {
   const formData = await request.formData();
+  const id = formData.get("id"); 
   const name = formData.get("name") as string;
-  const daily_budget = parseFloat(formData.get('daily_budget') as string);
+  const daily_budget = parseFloat(formData.get("daily_budget") as string);
 
   if (!name || !daily_budget) {
     Response.json(
@@ -37,32 +45,75 @@ export const action = async ({ request }: { request: Request }) => {
     );
   }
 
-  const newCampaign = {
-    id: Date.now(),
+ 
+  const isEdit = !!id;
+
+  const campaign = {
+    id: isEdit ? Number(id) : Date.now(),
     name,
     daily_budget,
     keywords: [],
   };
 
-  // const existingUser = findUserByEmailPassword(email, password)
-  const campaign = newCampaign;
+  if (isEdit) {
+    editCampaign(campaign);
+  } else {
+    addCampaign(campaign);
+  }
 
-  if (campaign) addCampaign(campaign);
+  // const existingUser = findUserByEmailPassword(email, password)
+
 
   return Response.json({ campaign }, { status: 200 });
 };
 
 export default function Index() {
   const actionData = useActionData<ActionData>();
-  const [campaignsArr, setCampaignsArr] = useState<AdCampaign[]>(campaigns);
+  const [campaignsArr, setCampaignsArr] = useState<AdCampaign[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<AdCampaign | null>(
+    null
+  );
+  const [nameInput, setNameInput] = useState("");
+  const [budgetInput, setBudgetInput] = useState<number>();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleEditPress = (campaign: AdCampaign) => {
+    setSelectedCampaign(campaign);
+    selectedCampaign && setNameInput(selectedCampaign.name);
+    selectedCampaign && setBudgetInput(selectedCampaign.daily_budget);
+    setIsDialogOpen(true);
+  };
+  const handleDeletePress = (campaign: AdCampaign) => {
+    deleteCampaign(campaign.id);
+    setCampaignsArr((prev) => prev.filter((c) => c.id !== campaign.id));
+  };
 
   useEffect(() => {
     if (actionData?.campaign) {
-      setCampaignsArr([...campaignsArr, actionData.campaign]);
-    } else {
-      console.log("error");
+      const exists = campaignsArr.some(c => c.id === actionData.campaign!.id);
+      if (exists) {
+        // Update existing campaign in list
+        setCampaignsArr(prev =>
+          prev.map(c => c.id === actionData.campaign!.id ? actionData.campaign! : c)
+        );
+      } else {
+        // Add new
+        setCampaignsArr(prev => [...prev, actionData.campaign!]);
+      }
+  
+      // Clear form and dialog state
+      setSelectedCampaign(null);
+      setNameInput("");
+      setBudgetInput(0);
+      setIsDialogOpen(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actionData]);
+
+  useEffect(() => {
+    setCampaignsArr(campaigns);
+  }, []);
+  console.log(campaignsArr);
   return (
     <>
       <div className="p-6">
@@ -91,17 +142,21 @@ export default function Index() {
                   {campaign.name}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 border-b">
-                  
-                  
-                     campaign.daily_budget
-                    
+                  {campaign.daily_budget}
                 </td>
                 <td className="px-6 py-4 border-b">
                   <div className="flex gap-2">
-                    <button className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <button
+                      onClick={() => handleEditPress(campaign)}
+                      className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
                       Edit
                     </button>
-                    <button className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+
+                    <button
+                      onClick={() => handleDeletePress(campaign)}
+                      className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                    >
                       Delete
                     </button>
                   </div>
@@ -111,7 +166,7 @@ export default function Index() {
           </tbody>
         </table>
       </div>
-      <Dialog>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
           <div className="flex">
             <button className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-900 self-center">
@@ -127,6 +182,9 @@ export default function Index() {
             </DialogDescription> */}
           </DialogHeader>
           <Form method="post" className="space-y-6">
+          {selectedCampaign && (
+    <input type="hidden" name="id" value={selectedCampaign.id} />
+  )}
             <div className="grid gap-4 py-4">
               <div className="mb-4">
                 <label
@@ -141,6 +199,8 @@ export default function Index() {
                   id="name"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                   placeholder="Enter your name"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
                 />
               </div>
               <div className="mb-4">
@@ -156,18 +216,32 @@ export default function Index() {
                   id="daily_budget"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                   placeholder="Enter your daily budget"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(+e.target.value)}
                 />
               </div>
             </div>
             <DialogFooter>
-              <div className="flex">
-                <button
-                  type="submit"
-                  className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-900 self-center"
-                >
-                  Save
-                </button>
-              </div>
+              <DialogClose>
+                <div className="flex">
+                  {!selectedCampaign ? (
+                    <button
+                      // type="submit"
+                      className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-900 self-center"
+                    >
+                      Save
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      
+                      className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-900 self-center"
+                    >
+                      Save Changes
+                    </button>
+                  )}
+                </div>
+              </DialogClose>
             </DialogFooter>
           </Form>
         </DialogContent>

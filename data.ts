@@ -105,10 +105,34 @@ export const campaigns: AdCampaign[] = [
   },
 ];
 
-
-
 export const addCampaign = (campaign: AdCampaign) => {
   if (campaign) {
     campaigns.push(campaign);
+  }
+};
+
+export const editCampaign = (updatedCampaign: AdCampaign) => {
+  const index = campaigns.findIndex((c) => c.id === updatedCampaign.id);
+  if (index !== -1) {
+    campaigns[index] = updatedCampaign;
+  }
+};
+
+export const deleteCampaign = (id: number) => {
+  const index = campaigns.findIndex((c) => c.id === id);
+  if (index !== -1) {
+    campaigns.splice(index, 1);
+  }
+};
+
+export const addKeyword = (campaignId: number, keyword: Keyword) => {
+  const campaign = campaigns.find((c) => c.id === campaignId);
+  if (campaign) campaign.keywords.push(keyword);
+};
+
+export const deleteKeyword = (campaignId: number, keywordId: number) => {
+  const campaign = campaigns.find((c) => c.id === campaignId);
+  if (campaign) {
+    campaign.keywords = campaign.keywords.filter((k) => k.id !== keywordId);
   }
 };
