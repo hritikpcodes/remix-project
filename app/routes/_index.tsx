@@ -1,5 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData } from "@remix-run/react";
 import {
   AdCampaign,
   addCampaign,
@@ -8,12 +8,11 @@ import {
   editCampaign,
 } from "data";
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
+
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -38,9 +37,9 @@ export const action = async ({ request }: { request: Request }) => {
   const name = formData.get("name") as string;
   const daily_budget = parseFloat(formData.get("daily_budget") as string);
 
-  if (!name || !daily_budget) {
-    Response.json(
-      { error: "Email and password are required" },
+  if (!name && !daily_budget) {
+   return Response.json(
+      { error: "Name and daily budget are required" },
       { status: 400 }
     );
   }
@@ -139,7 +138,7 @@ export default function Index() {
                 className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
               >
                 <td className="px-6 py-4 text-sm text-gray-900 border-b">
-                  {campaign.name}
+                <Link to={`/campaigns/${campaign.id}`}>{campaign.name}</Link>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 border-b">
                   {campaign.daily_budget}

@@ -13,6 +13,7 @@ export default function CampaignDetails() {
   if (!campaign) return <div>Campaign not found.</div>;
 
   const handleAddKeyword = () => {
+    if(!newKeyword && !bid) return;
     const newKw: Keyword = {
       id: Date.now(),
       campaignId: campaign.id,
@@ -24,7 +25,7 @@ export default function CampaignDetails() {
     addKeyword(campaign.id, newKw);
     setKeywords(prev => [...prev, newKw]);
     setNewKeyword("");
-    setBid(1);
+    setBid(0);
     setMatchType("broad");
   };
 
@@ -48,19 +49,21 @@ export default function CampaignDetails() {
           <input
             type="text"
             placeholder="Keyword text"
-            className="border px-3 py-2 rounded w-1/3"
+             className=" px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
             value={newKeyword}
             onChange={(e) => setNewKeyword(e.target.value)}
           />
           <input
             type="number"
             placeholder="Bid"
-            className="border px-3 py-2 rounded w-24"
+            className=" px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+
             value={bid}
             onChange={(e) => setBid(parseFloat(e.target.value))}
           />
           <select
-            className="border px-3 py-2 rounded"
+                        className=" px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+
             value={matchType}
             onChange={(e) => setMatchType(e.target.value as Keyword["match_type"])}
           >
