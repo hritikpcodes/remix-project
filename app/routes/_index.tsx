@@ -15,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "~/components/ui/dialog";
 
 type ActionData = {
@@ -85,14 +84,15 @@ export default function Index() {
   useEffect(() => {
     setCampaignsArr(campaigns);
   }, []);
-
   useEffect(() => {
     if (actionData?.campaign) {
       const exists = campaignsArr.some((c) => c.id === actionData.campaign!.id);
       if (exists) {
-        setCampaignsArr((prev) => prev.map((c) => (c.id === actionData.campaign!.id ? actionData.campaign! : c)));
+        // setCampaignsArr((prev) => prev.map((c) => (c.id === actionData.campaign!.id ? actionData.campaign! : c)));
+        editCampaign(actionData?.campaign)
       } else {
-        setCampaignsArr((prev) => [...prev, actionData.campaign!]);
+        // setCampaignsArr((prev) => [...prev, actionData.campaign!]);
+        addCampaign(actionData?.campaign)
       }
       setSelectedCampaign(null);
       setNameInput("");
