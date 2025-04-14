@@ -57,7 +57,7 @@ export default function Index() {
   const [campaignsArr, setCampaignsArr] = useState<AdCampaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<AdCampaign | null>(null);
   const [nameInput, setNameInput] = useState("");
-  const [budgetInput, setBudgetInput] = useState<number>(0);
+  const [budgetInput, setBudgetInput] = useState<number | null>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const allColumns = [
@@ -253,8 +253,15 @@ export default function Index() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                   placeholder="Enter daily budget"
-                  value={budgetInput}
-                  onChange={(e) => setBudgetInput(+e.target.value)}
+                  value={budgetInput || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "") {
+                      setBudgetInput(null); // temporarily empty
+                    } else {
+                      setBudgetInput(+e.target.value)
+                    }
+                  }}
                 />
               </div>
             </div>
