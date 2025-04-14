@@ -23,7 +23,7 @@ export default function CampaignDetails() {
       state: "enabled"
     };
     addKeyword(campaign.id, newKw);
-    setKeywords(prev => [...prev, newKw]);
+    // setKeywords(prev => [...prev, newKw]);
     setNewKeyword("");
     setBid(0);
     setMatchType("broad");
